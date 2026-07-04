@@ -1,0 +1,29 @@
+{
+  "description": "Two hooks implementing the generator/arbiter model economy. (1) SessionStart on startup/resume — injects a short reminder (session-start-economy.js) that the premium session model should spend its tokens on judgment while bulk reading/exploration and bulk generation are delegated to a cheaper tier; the reminder carries the absolute path to references/economy-playbook.md (passed as ${CLAUDE_PLUGIN_ROOT}) so the agent can read the full split on demand. Static context injection, writes nothing. (2) PreToolUse on the subagent-spawn tool (matcher Task|Agent) — economy-checkpoint.js inspects the spawn: when it targets a built-in bulk agent that inherits the session model (Explore / general-purpose, or an empty subagent_type which defaults to general-purpose) AND no model was pinned, it rewrites tool_input via updatedInput to add model:sonnet (broad exploration is bulk work; the premium tier is reserved for judgment) and injects an additionalContext note telling the model it was auto-pinned and to re-issue with model:opus if the search needs cross-file reasoning. Custom agents (own model frontmatter) and already-pinned spawns are passed through untouched. It never denies and never sets permissionDecision, so it does not bypass the user's Task permission settings. Fail-open on any parse/shape error; reads stdin only, writes nothing.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start-economy.js\" \"${CLAUDE_PLUGIN_ROOT}\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Task|Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/economy-checkpoint.js\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

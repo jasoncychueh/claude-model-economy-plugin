@@ -34,9 +34,31 @@ The **reads** side (exploration tier) is enforced at the one interceptable momen
 
 ## Install
 
-Install globally (user level) so the economy applies to every project and session — that's the point of an "everyday" economy.
+This plugin is published in the **chipright-plugins** marketplace. Install it at **user** scope so the economy applies to every project and session — that's the point of an "everyday" economy.
 
-Once installed, there is nothing to invoke: the SessionStart reminder appears each session, and the exploration auto-pin fires whenever the agent fans out a search.
+1. **Add the marketplace** (skip if you already have it):
+   ```
+   /plugin marketplace add ssh://git@bitbucket.chipright.com.tw:7999/at/claude-plugins.git
+   ```
+   If it's already added, refresh it so the new entry shows up:
+   ```
+   /plugin marketplace update chipright-plugins
+   ```
+2. **Install the plugin** — the `@marketplace` suffix is required:
+   ```
+   /plugin install model-economy@chipright-plugins
+   ```
+   Choose the **user** scope when prompted.
+3. **Activate it in the current session** — no restart needed:
+   ```
+   /reload-plugins
+   ```
+
+Prefer a menu? Run `/plugin`, open the **Discover** tab, find `model-economy`, and press Enter.
+
+> The marketplace URL must include its scheme (`ssh://` or `https://`); Claude Code v2.1.196+ rejects a bare `host/path` as invalid GitHub shorthand.
+
+Once installed there is nothing to invoke: each session opens with the economy reminder, and any un-pinned Explore / general-purpose search is auto-tiered to `sonnet`.
 
 ## Files
 

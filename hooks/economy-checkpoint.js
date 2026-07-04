@@ -69,10 +69,9 @@ try {
       hookEventName: 'PreToolUse',
       updatedInput: Object.assign({}, ti, { model: 'sonnet' }),
       additionalContext:
-        'Model economy: auto-pinned this ' + label + ' search to `model: sonnet` — ' +
-        'broad exploration is bulk work, and the premium session tier is reserved for judgment. ' +
-        'If this search needs cross-file reasoning or synthesis, re-issue it with `model: opus`. ' +
-        'For a known target, read it directly (Grep / Read) instead of spawning a subagent.',
+        'Model economy: auto-pinned this ' + label + ' subagent to `model: sonnet` — ' +
+        'bulk work delegated to a subagent should run on a cheaper tier, not your premium session model. ' +
+        'If this task genuinely needs cross-file reasoning or synthesis, re-issue it with `model: opus`.',
     },
   };
   process.stdout.write(JSON.stringify(out));

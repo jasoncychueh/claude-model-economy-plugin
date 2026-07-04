@@ -1,0 +1,20 @@
+{
+  "name": "claude-model-economy-plugin",
+  "description": "Model-economy plugin for Claude Code",
+  "owner": {
+    "name": "Jason Chueh",
+    "email": "jasoncychueh@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "model-economy",
+      "description": "Generator/arbiter model economy for everyday agent work: reserves the premium session model for judgment and pushes bulk reading/exploration and generation down to cheaper tiers. A PreToolUse hook auto-pins un-pinned Explore/general-purpose subagent spawns to a cheaper model; a SessionStart hook injects the economy principle each session.",
+      "version": "1.0.0",
+      "source": "./",
+      "author": {
+        "name": "Jason Chueh",
+        "email": "jasoncychueh@gmail.com"
+      }
+    }
+  ]
+}

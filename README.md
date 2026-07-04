@@ -2,7 +2,7 @@
 
 A Claude Code plugin that brings the **generator/arbiter model economy** into everyday agent work — not just inside a spec workflow, but in every session.
 
-The idea in one line: **the premium session model is worth its price for judgment, not for legwork.** Reading twenty files to find one thing, or typing out a long boilerplate module, costs the same tokens whoever does it — so paying the top tier to do it is waste. This plugin keeps the judgment on the premium model and pushes the bulk down to a cheaper tier.
+The idea in one line: **the main agent is the arbiter, not the executor.** It reviews, challenges, decides, and coordinates — spending its premium tokens on judgment — while the actual execution (searching, sweeping files, generating code) goes to subagents on a cheaper tier. Work that costs the same tokens whoever does it has no business running on the top tier.
 
 ## How it works
 
@@ -10,7 +10,7 @@ Two hooks, no slash commands, nothing to remember:
 
 ### 1. SessionStart — the principle, always on
 
-Every session (startup / resume) gets a short reminder injected: spend the premium model on conversing, deciding, distilling, and challenging; delegate bulk reading/exploration and bulk generation to a cheaper tier; apply it proportionally (don't spawn subagents for trivia). The reminder links to [`references/economy-playbook.md`](references/economy-playbook.md) for the full split.
+Every session (startup / resume) gets a short reminder injected: the main agent is the arbiter (reviewer / concept-challenger / decision-maker / coordinator) and subagents are the executors — hand the real work to a subagent on a cheaper tier, and spend premium tokens judging and challenging what comes back. It says nothing about how you read files. It links to [`references/economy-playbook.md`](references/economy-playbook.md) for the full split.
 
 A skill would under-trigger in casual conversation — a SessionStart injection is the reliable "always-on" lever.
 
@@ -18,7 +18,7 @@ A skill would under-trigger in casual conversation — a SessionStart injection 
 
 The enforceable half. When the agent spawns a built-in `Explore` / `general-purpose` subagent (which otherwise **inherits the session model**) *without* pinning a `model`, the hook rewrites the spawn to `model: sonnet` before it runs and leaves a note:
 
-> auto-pinned this search to `model: sonnet` — re-issue with `model: opus` if it needs cross-file reasoning.
+> auto-pinned this subagent to `model: sonnet` — re-issue with `model: opus` if it needs cross-file reasoning.
 
 So a broad codebase sweep never rides Opus/Fable just because that's what the session happens to be on.
 
@@ -30,33 +30,27 @@ So a broad codebase sweep never rides Opus/Fable just because that's what the se
 
 ## Scope: what the hook enforces vs. what the guidance covers
 
-The **reads** side (exploration tier) is enforced at the one interceptable moment — the spawn. The **writes** side (delegate bulk generation, then challenge the result) has no clean trigger to hook, so it lives in the SessionStart reminder and the playbook as guidance the agent applies with judgment. Together they cover the full split; the hook just makes the most common, most wasteful case automatic.
+The hook enforces one slice automatically — re-tiering an un-pinned exploration subagent at the spawn. The rest of the split (handing execution to a subagent at all, staying the arbiter, and challenging what comes back) has no clean trigger to hook — nothing fires when the main agent just does the work itself — so it lives in the SessionStart reminder and the playbook as guidance. Both concern **who executes (a cheaper-tier subagent) and your role over them** — the plugin still doesn't prescribe how you read files. The hook just makes the most common, most wasteful case automatic.
 
 ## Install
 
-This plugin is published in the **chipright-plugins** marketplace. Install it at **user** scope so the economy applies to every project and session — that's the point of an "everyday" economy.
+This repo doubles as its own single-plugin marketplace (via `.claude-plugin/marketplace.json`), so you can install it straight from GitHub — the same way as [claude-spec-driven-dev-plugin](https://github.com/jasoncychueh/claude-spec-driven-dev-plugin).
 
-1. **Add the marketplace** (skip if you already have it):
+1. **Add this repo as a marketplace:**
    ```
-   /plugin marketplace add ssh://git@bitbucket.chipright.com.tw:7999/at/claude-plugins.git
-   ```
-   If it's already added, refresh it so the new entry shows up:
-   ```
-   /plugin marketplace update chipright-plugins
+   /plugin marketplace add jasoncychueh/claude-model-economy-plugin
    ```
 2. **Install the plugin** — the `@marketplace` suffix is required:
    ```
-   /plugin install model-economy@chipright-plugins
+   /plugin install model-economy@claude-model-economy-plugin
    ```
-   Choose the **user** scope when prompted.
+   Choose the **user** scope when prompted, so it applies to every project.
 3. **Activate it in the current session** — no restart needed:
    ```
    /reload-plugins
    ```
 
-Prefer a menu? Run `/plugin`, open the **Discover** tab, find `model-economy`, and press Enter.
-
-> The marketplace URL must include its scheme (`ssh://` or `https://`); Claude Code v2.1.196+ rejects a bare `host/path` as invalid GitHub shorthand.
+Prefer a menu? Run `/plugin`, use the **Marketplaces** tab to add `jasoncychueh/claude-model-economy-plugin`, then the **Discover** tab to install `model-economy`.
 
 Once installed there is nothing to invoke: each session opens with the economy reminder, and any un-pinned Explore / general-purpose search is auto-tiered to `sonnet`.
 

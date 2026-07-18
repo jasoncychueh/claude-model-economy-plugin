@@ -32,7 +32,7 @@ const REMINDER = [
   'As the main agent you are the arbiter, not the executor: you review, challenge the concepts, arbitrate the decisions, and coordinate. The subagents are the actual executors — hand the real work to them on a cheaper tier, and spend your premium tokens judging and challenging what they return.',
   '',
   "- Delegate execution — searching, sweeping many files, generating code or docs — to a subagent; don't do the legwork yourself on the premium tier.",
-  '- Un-pinned `Explore` / `general-purpose` spawns are auto-pinned to `model: sonnet`; re-issue with `model: opus` only if the task needs genuine cross-file reasoning.',
+  '- Un-pinned `Explore` spawns are auto-pinned to `model: haiku` (`general-purpose` to `model: sonnet`); re-issue with `model: opus` only if the task needs genuine cross-file reasoning.',
   "- A cheap executor is safe only with a premium critic — challenge the output, don't rubber-stamp it.",
   '',
   'This is about who executes (cheaper-tier subagents) and your role over them (reviewer / challenger / arbiter / coordinator) — not about how you read files.',

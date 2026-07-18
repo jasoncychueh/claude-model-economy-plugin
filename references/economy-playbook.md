@@ -25,7 +25,7 @@ A cheap executor is only safe with a premium critic — and being that critic is
 
 ## What the plugin enforces automatically
 
-One point is enforced without you thinking about it: when you spawn a built-in `Explore` / `general-purpose` executor without pinning a model, a PreToolUse hook rewrites it to `model: sonnet` and leaves you a note. If that task needed reasoning, re-issue it with `model: opus`. Everything else here is posture.
+One point is enforced without you thinking about it: when you spawn a built-in `Explore` / `general-purpose` executor without pinning a model, a PreToolUse hook rewrites it — `model: haiku` for `Explore` (pure read-only lookup), `model: sonnet` for `general-purpose` (may involve multi-step work) — and leaves you a note. If that task needed reasoning, re-issue it with `model: opus`. Everything else here is posture.
 
 ## Failure modes to avoid
 

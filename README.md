@@ -16,17 +16,17 @@ A skill would under-trigger in casual conversation — a SessionStart injection 
 
 ### 2. PreToolUse — exploration auto-pinned to a cheaper tier
 
-The enforceable half. When the agent spawns a built-in `Explore` / `general-purpose` subagent (which otherwise **inherits the session model**) *without* pinning a `model`, the hook rewrites the spawn to `model: sonnet` before it runs and leaves a note:
+The enforceable half. When the agent spawns a built-in `Explore` / `general-purpose` subagent (which otherwise **inherits the session model**) *without* pinning a `model`, the hook rewrites the spawn before it runs and leaves a note. `Explore` is pure read-only lookup, so it's pinned to the cheapest tier, `haiku`; `general-purpose` (and an empty `subagent_type`, which defaults to general-purpose) can involve multi-step work, so it keeps the `sonnet` floor:
 
-> auto-pinned this subagent to `model: sonnet` — re-issue with `model: opus` if it needs cross-file reasoning.
+> auto-pinned this subagent to `model: haiku` (or `sonnet` for general-purpose) — re-issue with `model: opus` if it needs cross-file reasoning.
 
 So a broad codebase sweep never rides Opus/Fable just because that's what the session happens to be on.
 
-- **Non-blocking.** It uses `updatedInput` to re-tier the spawn, never `deny`. The subagent runs immediately, one tier cheaper.
+- **Non-blocking.** It uses `updatedInput` to re-tier the spawn, never `deny`. The subagent runs immediately, one or two tiers cheaper.
 - **Respects deliberate choices.** If you pinned a model yourself (including an intentional `opus`), it's left untouched.
 - **Never touches custom agents.** Only `Explore` / `general-purpose` (and an empty `subagent_type`, which defaults to general-purpose) inherit the session model; agents with their own `model:` frontmatter are passed through.
 - **Doesn't change your permissions.** It sets no `permissionDecision`, so your Task permission settings still apply.
-- **A no-op when you're already cheap.** The hook can't read the session model, so it always pins `sonnet` — which changes nothing if you're already on sonnet, and only saves when you're on a premium tier. It saves exactly when there's something to save.
+- **A no-op when you're already cheap.** The hook can't read the session model, so it always pins its floor — `haiku` for Explore, `sonnet` for general-purpose — which changes nothing if you're already at or below that tier, and only saves when you're on a premium tier. It saves exactly when there's something to save.
 
 ## Scope: what the hook enforces vs. what the guidance covers
 
@@ -52,7 +52,7 @@ This repo doubles as its own single-plugin marketplace (via `.claude-plugin/mark
 
 Prefer a menu? Run `/plugin`, use the **Marketplaces** tab to add `jasoncychueh/claude-model-economy-plugin`, then the **Discover** tab to install `model-economy`.
 
-Once installed there is nothing to invoke: each session opens with the economy reminder, and any un-pinned Explore / general-purpose search is auto-tiered to `sonnet`.
+Once installed there is nothing to invoke: each session opens with the economy reminder, and any un-pinned Explore search is auto-tiered to `haiku` (general-purpose to `sonnet`).
 
 ## Files
 

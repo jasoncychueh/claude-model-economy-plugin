@@ -2,6 +2,10 @@
 
 Version history and decision rationale are collected here.
 
+## 1.1.0 (2026-07-18)
+
+- **`economy-checkpoint.js` — split the auto-pin tier by agent.** `Explore` (pure read-only lookup) is now pinned to `model: haiku`, the cheapest tier. `general-purpose` (and the empty `subagent_type` default, which resolves to general-purpose) keeps the `model: sonnet` floor, since it may involve multi-step work beyond mechanical search. Previously both were pinned to `sonnet`. The `additionalContext` note now tells the model which floor it landed on and that `model: opus` (or `model: sonnet` from the haiku floor) is available if the task needs more reasoning.
+
 ## 1.0.0 (2026-07-05)
 
 First release. Brings the generator/arbiter split — first built into the spec-driven-development plugin, where it governed a structured workflow — out into **everyday agent work**, via two hooks and no slash commands. The concept: the **main agent is the arbiter** (reviewer, concept-challenger, decision-maker, coordinator) and **subagents are the executors** that do the real work on a cheaper tier. So the premium session model is spent on judgment, and the doing is delegated down. It deliberately says nothing about how you read files.

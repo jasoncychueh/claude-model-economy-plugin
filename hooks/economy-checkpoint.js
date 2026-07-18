@@ -20,10 +20,11 @@
  *     Custom agents carry their own `model:` frontmatter, so they are NEVER touched, and
  *   - no `model` was pinned on the spawn (a deliberate model choice, including an
  *     intentional opus, is always respected).
- *   → rewrite tool_input via `updatedInput` to add `model: "sonnet"` (a safe cheap
- *     floor for mechanical search), and inject an `additionalContext` note so the model
- *     knows it was auto-pinned and can re-issue with `model: "opus"` when the search
- *     genuinely needs cross-file reasoning.
+ *   → rewrite tool_input via `updatedInput` to add `model`: `"haiku"` for Explore (pure
+ *     read-only lookup — the cheapest tier fits), `"sonnet"` for general-purpose / empty
+ *     (may involve multi-step work, so it keeps the higher floor). Also inject an
+ *     `additionalContext` note so the model knows it was auto-pinned and can re-issue
+ *     with `model: "opus"` when the search genuinely needs cross-file reasoning.
  *
  * WHY no permissionDecision: setting "allow" would skip the user's Task permission
  * prompt; this plugin only pins the tier, it must not change permission behavior. We
@@ -63,15 +64,20 @@ try {
   // A deliberate model choice (any non-empty value) is respected.
   if (ti.model != null && String(ti.model).trim() !== '') passthrough();
 
+  // Explore is pure read-only lookup (find files/symbols) — pin it to the cheapest
+  // tier. general-purpose (and the empty default, which resolves to general-purpose)
+  // can involve multi-step tasks, so it keeps the sonnet floor.
   const label = st || 'general-purpose';
+  const tier = st === 'explore' ? 'haiku' : 'sonnet';
   const out = {
     hookSpecificOutput: {
       hookEventName: 'PreToolUse',
-      updatedInput: Object.assign({}, ti, { model: 'sonnet' }),
+      updatedInput: Object.assign({}, ti, { model: tier }),
       additionalContext:
-        'Model economy: auto-pinned this ' + label + ' subagent to `model: sonnet` — ' +
+        'Model economy: auto-pinned this ' + label + ' subagent to `model: ' + tier + '` — ' +
         'bulk work delegated to a subagent should run on a cheaper tier, not your premium session model. ' +
-        'If this task genuinely needs cross-file reasoning or synthesis, re-issue it with `model: opus`.',
+        'If this task genuinely needs cross-file reasoning or synthesis, re-issue it with `model: opus`' +
+        (tier === 'haiku' ? ' (or `model: sonnet` for a middle tier).' : '.'),
     },
   };
   process.stdout.write(JSON.stringify(out));

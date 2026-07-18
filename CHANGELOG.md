@@ -2,7 +2,7 @@
 
 Version history and decision rationale are collected here.
 
-## 1.1.0 (2026-07-18)
+## 1.0.1 (2026-07-18)
 
 - **`economy-checkpoint.js` — split the auto-pin tier by agent.** `Explore` (pure read-only lookup) is now pinned to `model: haiku`, the cheapest tier. `general-purpose` (and the empty `subagent_type` default, which resolves to general-purpose) keeps the `model: sonnet` floor, since it may involve multi-step work beyond mechanical search. Previously both were pinned to `sonnet`. The `additionalContext` note now tells the model which floor it landed on and that `model: opus` (or `model: sonnet` from the haiku floor) is available if the task needs more reasoning.
 

@@ -15,7 +15,7 @@ Spend your tokens on the judgment; hand the execution down.
 
 **The context — and this one holds on any model.** Your context is re-read on every turn for the rest of the session. Twenty files you read yourself stay in it and are paid for again on each turn after. A subagent reads them in its own context, which ends with the dispatch, and hands back a conclusion a few hundred words long. Even when you and the subagent run the same model, delegating still saves.
 
-"Cheaper" does not mean "smaller model", though. On current models a stronger model at moderate effort often costs less per task than a weaker one pushed to high effort — the economical executor tier is opus, not sonnet.
+"Cheaper" does not mean "smaller model", though. On current models a stronger model at low effort costs less per task than a weaker one at medium, and still outscores it at its highest effort — the economical executor tier is opus at low effort, not sonnet.
 
 ## What this governs — and what it doesn't
 
@@ -26,8 +26,8 @@ It is **not** a rule about how you read files or which tools you use. When you d
 ## The tier default
 
 - **Mechanical lookup** — locate a file, find a symbol, enumerate callers: `model: haiku`. The cheapest tier by a wide margin, and lookup needs no reasoning.
-- **Everything else** — multi-step work, anything that must reason or synthesize across files: opus at medium effort — the plugin's `model-economy:worker` agent.
-- **Not sonnet.** On current per-task cost measurements, opus at medium effort is both smarter than sonnet and cheaper than sonnet at high effort; sonnet no longer earns a middle slot.
+- **Everything else** — multi-step work, anything that must reason or synthesize across files: opus at low effort — the plugin's `model-economy:worker` agent.
+- **Not sonnet.** On current per-task cost measurements, opus at low effort costs less than sonnet at medium and scores above sonnet at xhigh; sonnet no longer earns a slot.
 
 A spawn cannot set its effort level: a built-in subagent inherits the session's, so a model pin alone leaves an executor at high or xhigh when the session runs there. An agent's frontmatter can set effort, which is why multi-step work goes to `model-economy:worker` rather than to `general-purpose` with a model pin. `Explore` still inherits the session's effort — a lookup spends little on thinking either way.
 
@@ -37,7 +37,7 @@ Delegated execution is only safe with a critic — and being that critic is your
 
 ## What the plugin enforces automatically
 
-One point is enforced without you thinking about it: when you spawn a built-in `Explore` / `general-purpose` executor without pinning a model, a PreToolUse hook rewrites it — `Explore` gets `model: haiku` (pure read-only lookup), `general-purpose` is redirected to `model-economy:worker` (opus at medium effort, for multi-step work) — and leaves you a note. Pinning `model` yourself opts out of both. If an `Explore` task turned out to need reasoning, re-issue it with `model: opus`. Everything else here is posture.
+One point is enforced without you thinking about it: when you spawn a built-in `Explore` / `general-purpose` executor without pinning a model, a PreToolUse hook rewrites it — `Explore` gets `model: haiku` (pure read-only lookup), `general-purpose` is redirected to `model-economy:worker` (opus at low effort, for multi-step work) — and leaves you a note. Pinning `model` yourself opts out of both. If an `Explore` task turned out to need reasoning, re-issue it with `model: opus`. Everything else here is posture.
 
 ## Failure modes to avoid
 

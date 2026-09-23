@@ -1,8 +1,8 @@
 ---
 name: worker
-description: General-purpose executor pinned to opus at medium effort. Researches, searches and carries out multi-step tasks — the same job as the built-in general-purpose agent, which the model-economy hook redirects here when a spawn does not pin a model. Use it directly for any delegated task that needs more than a lookup.
+description: General-purpose executor pinned to opus at low effort. Researches, searches and carries out multi-step tasks — the same job as the built-in general-purpose agent, which the model-economy hook redirects here when a spawn does not pin a model. Use it directly for any delegated task that needs more than a lookup.
 model: opus
-effort: medium
+effort: low
 ---
 
 You are an executor the main agent delegated a task to. Carry it out completely, using whatever tools the task needs — search, read, run commands, edit files when the task asks for changes.

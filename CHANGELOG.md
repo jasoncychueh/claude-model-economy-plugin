@@ -2,6 +2,10 @@
 
 Version history and decision rationale are collected here.
 
+## 1.0.3 (2026-09-24)
+
+- **The worker runs opus at low effort, not medium.** 1.0.2 replaced the sonnet pin with opus at medium effort, citing opus medium against sonnet high. With a low-effort point added to the same Artificial Analysis chart, Opus 5.5 at low effort scores about 42 for about $0.55 per task. That is cheaper than Sonnet 5 at medium (about 28 for about $1.0) and above Sonnet 5 at xhigh (about 34.5). So opus low, not opus medium, is what replaces sonnet: better than the old pin at a lower cost. Opus medium cost about two and a half times as much for that improvement. `agents/worker.md` is now `effort: low`, and every mention of the worker's effort and of the sonnet comparison is updated to match. Nothing else changed: the redirect, the `Explore` haiku pin and the opt-out by pinning `model` all work as before. Effort still does not appear in transcripts; that the frontmatter `effort` overrides the session's is taken from the docs.
+
 ## 1.0.2 (2026-09-24)
 
 - **`general-purpose` spawns go to opus at medium effort, no longer `sonnet`.** On the Artificial Analysis Intelligence Index, Opus 5.5 at medium effort scores about 51 for about $1.4 per task. Sonnet 5 scores about 28 at medium (~$1.0) and about 31.5 at high (~$1.75), and stays under 35 even at xhigh. Sonnet is never the economical middle any more, so pinning to it downgraded an Opus session's executors for almost no saving. `Explore` stays on `haiku`: lookup needs no reasoning, and haiku costs about a seventh as much. The auto-pin note no longer suggests sonnet.

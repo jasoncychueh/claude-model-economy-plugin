@@ -25,11 +25,11 @@
  *     cheapest tier fits), plus an `additionalContext` note that it can be re-issued
  *     with `model: "opus"` when the search genuinely needs cross-file reasoning.
  *   → general-purpose / empty: redirect `subagent_type` to this plugin's `worker`
- *     agent, whose frontmatter is `model: opus` + `effort: medium`. A redirect rather
+ *     agent, whose frontmatter is `model: opus` + `effort: low`. A redirect rather
  *     than a `model` pin because the spawn has no effort parameter: pinning only the
  *     model would leave the executor at the session's effort, possibly high or xhigh.
- *     Not sonnet: on current per-task cost measurements opus at medium effort is
- *     smarter than sonnet and cheaper than sonnet at high effort. No `model` is added
+ *     Not sonnet: on current per-task cost measurements opus at low effort costs
+ *     less than sonnet at medium and scores above sonnet at xhigh. No `model` is added
  *     to the redirected spawn — a per-spawn model would override the worker's own.
  *     Verified: a PreToolUse `updatedInput` that changes `subagent_type` makes the
  *     harness spawn the named agent, on that agent's frontmatter model.
@@ -49,7 +49,7 @@
 'use strict';
 const fs = require('fs');
 
-// The plugin's own general-purpose executor (agents/worker.md): opus at medium effort.
+// The plugin's own general-purpose executor (agents/worker.md): opus at low effort.
 const WORKER = 'model-economy:worker';
 
 // no-op: emit nothing -> Claude Code proceeds with the original tool call
@@ -83,7 +83,7 @@ try {
   } else {
     // Multi-step work — redirected to the worker so both model and effort are pinned.
     updatedInput = Object.assign({}, ti, { subagent_type: WORKER });
-    note = 'Model economy: redirected this general-purpose subagent to `' + WORKER + '` (opus at medium effort) — ' +
+    note = 'Model economy: redirected this general-purpose subagent to `' + WORKER + '` (opus at low effort) — ' +
       'a delegated task runs at the tier its shape needs, not at whatever model and effort the session runs. ' +
       'Pin `model` on the spawn to keep the built-in general-purpose agent instead.';
   }

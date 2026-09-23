@@ -16,21 +16,21 @@ A skill would under-trigger in casual conversation — a SessionStart injection 
 
 ### 2. PreToolUse — exploration auto-pinned off the premium tier
 
-The enforceable half. When the agent spawns a built-in `Explore` / `general-purpose` subagent (which otherwise **inherits the session model**) *without* pinning a `model`, the hook rewrites the spawn before it runs and leaves a note. `Explore` is pure read-only lookup, so it's pinned to the cheapest tier, `haiku`. `general-purpose` (and an empty `subagent_type`, which defaults to general-purpose) can involve multi-step work, so it's redirected to the plugin's own `model-economy:worker` agent — opus at medium effort:
+The enforceable half. When the agent spawns a built-in `Explore` / `general-purpose` subagent (which otherwise **inherits the session model**) *without* pinning a `model`, the hook rewrites the spawn before it runs and leaves a note. `Explore` is pure read-only lookup, so it's pinned to the cheapest tier, `haiku`. `general-purpose` (and an empty `subagent_type`, which defaults to general-purpose) can involve multi-step work, so it's redirected to the plugin's own `model-economy:worker` agent — opus at low effort:
 
 > auto-pinned this Explore subagent to `model: haiku` — re-issue with `model: opus` if it needs cross-file reasoning.
 >
-> redirected this general-purpose subagent to `model-economy:worker` (opus at medium effort).
+> redirected this general-purpose subagent to `model-economy:worker` (opus at low effort).
 
-Not `sonnet`: on current per-task cost measurements, Opus at medium effort is smarter than Sonnet and cheaper than Sonnet at high effort, so Sonnet is never the economical middle. A lookup never rides a reasoning model, and execution never rides a premium tier such as Fable just because that's what the session happens to be on.
+Not `sonnet`: on current per-task cost measurements, Opus at low effort costs less than Sonnet at medium and scores above Sonnet at xhigh, so Sonnet is never the economical pick. A lookup never rides a reasoning model, and execution never rides a premium tier such as Fable just because that's what the session happens to be on.
 
-**Why a redirect, not a model pin, for general-purpose**: the spawn has no effort parameter, so a built-in subagent runs at the session's effort level — high or xhigh if that is where the session is. An agent's frontmatter can set effort, so the worker carries `model: opus` + `effort: medium` and the hook points the spawn at it. Verified: rewriting `subagent_type` in `updatedInput` makes the harness spawn the named agent on its frontmatter model.
+**Why a redirect, not a model pin, for general-purpose**: the spawn has no effort parameter, so a built-in subagent runs at the session's effort level — high or xhigh if that is where the session is. An agent's frontmatter can set effort, so the worker carries `model: opus` + `effort: low` and the hook points the spawn at it. Verified: rewriting `subagent_type` in `updatedInput` makes the harness spawn the named agent on its frontmatter model.
 
 - **Non-blocking.** It uses `updatedInput` to re-tier the spawn, never `deny`. The subagent runs immediately.
 - **Respects deliberate choices.** If you pinned a model yourself (including an intentional `opus`), it's left untouched — that is also how to keep the built-in general-purpose agent.
 - **Never touches custom agents.** Only `Explore` / `general-purpose` (and an empty `subagent_type`, which defaults to general-purpose) inherit the session model; agents with their own `model:` frontmatter are passed through.
 - **Doesn't change your permissions.** It sets no `permissionDecision`, so your Task permission settings still apply.
-- **Pins by task shape, not by session.** The hook can't read the session model, so it decides by subagent type: `haiku` for Explore, the opus-medium worker for general-purpose. On an Opus session at medium effort the redirect changes little; on a premium tier or a higher effort it keeps execution off both.
+- **Pins by task shape, not by session.** The hook can't read the session model, so it decides by subagent type: `haiku` for Explore, the opus-low worker for general-purpose. On an Opus session at low effort the redirect changes nothing; above that — a higher effort or a premium tier — it brings execution down to opus low.
 
 ## Scope: what the hook enforces vs. what the guidance covers
 
@@ -56,7 +56,7 @@ This repo doubles as its own single-plugin marketplace (via `.claude-plugin/mark
 
 Prefer a menu? Run `/plugin`, use the **Marketplaces** tab to add `jasoncychueh/claude-model-economy-plugin`, then the **Discover** tab to install `model-economy`.
 
-Once installed there is nothing to invoke: each session opens with the economy reminder, and any un-pinned Explore search is auto-tiered to `haiku` (general-purpose is redirected to the opus-medium worker).
+Once installed there is nothing to invoke: each session opens with the economy reminder, and any un-pinned Explore search is auto-tiered to `haiku` (general-purpose is redirected to the opus-low worker).
 
 ## Files
 
@@ -64,7 +64,7 @@ Once installed there is nothing to invoke: each session opens with the economy r
 model-economy/
 ├── .claude-plugin/plugin.json
 ├── agents/
-│   └── worker.md                  # general-purpose executor: opus at medium effort
+│   └── worker.md                  # general-purpose executor: opus at low effort
 ├── hooks/
 │   ├── hooks.json                 # SessionStart + PreToolUse wiring
 │   ├── session-start-economy.js   # injects the economy principle each session

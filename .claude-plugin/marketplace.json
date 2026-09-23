@@ -8,8 +8,8 @@
   "plugins": [
     {
       "name": "model-economy",
-      "description": "Generator/arbiter model economy for everyday agent work: reserves the premium session model for judgment and pushes bulk reading/exploration and generation down to cheaper tiers. A PreToolUse hook auto-pins un-pinned Explore spawns to haiku and general-purpose spawns to sonnet; a SessionStart hook injects the economy principle each session.",
-      "version": "1.0.1",
+      "description": "Generator/arbiter model economy for everyday agent work: reserves the premium session model for judgment and hands bulk reading/exploration and generation to subagents at haiku or opus, keeping the main context small. A PreToolUse hook auto-pins un-pinned Explore spawns to haiku and redirects general-purpose spawns to its own opus-at-medium-effort worker agent; a SessionStart hook injects the economy principle each session.",
+      "version": "1.0.2",
       "source": "./",
       "author": {
         "name": "Jason Chueh",

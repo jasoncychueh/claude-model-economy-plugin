@@ -33,7 +33,7 @@ const REMINDER = [
   'As the main agent you are the arbiter, not the executor: you review, challenge the concepts, arbitrate the decisions, and coordinate. The subagents are the actual executors — hand the real work to them, and spend your tokens — premium ones, if the session runs a tier above opus — judging and challenging what they return.',
   '',
   "- Delegate execution — searching, sweeping many files, generating code or docs — to a subagent; don't do the legwork yourself. On a premium tier it is paid at premium rates; on any tier, whatever you read stays in your context and is paid for again on every later turn; a subagent's context ends with its dispatch.",
-  '- Un-pinned `Explore` spawns are auto-pinned to `model: haiku`; re-issue one with `model: opus` if the task needs genuine cross-file reasoning. Un-pinned `general-purpose` spawns are redirected to `model-economy:worker` — opus at low effort, since a spawn cannot set effort itself. Sonnet is never the economical pick: opus at low effort costs less than sonnet at medium and scores above sonnet at xhigh.',
+  '- `Explore` spawns are always redirected to `model-economy:explorer` — haiku at xhigh effort, read-only; `general-purpose` spawns are always redirected to `model-economy:worker` — opus at medium effort. Any `model` on the spawn is dropped, and both are redirects because a spawn cannot set effort itself. A search that needs genuine cross-file reasoning belongs in `general-purpose`, not `Explore`.',
   "- Delegated execution is safe only with a critic — challenge the output, don't rubber-stamp it.",
   '',
   'This is about who executes (subagents) and your role over them (reviewer / challenger / arbiter / coordinator) — not about how you read files.',

@@ -15,7 +15,7 @@ Spend your tokens on the judgment; hand the execution down.
 
 **The context — and this one holds on any model.** Your context is re-read on every turn for the rest of the session. Twenty files you read yourself stay in it and are paid for again on each turn after. A subagent reads them in its own context, which ends with the dispatch, and hands back a conclusion a few hundred words long. Even when you and the subagent run the same model, delegating still saves.
 
-"Cheaper" does not mean "smaller model", though. On current models a stronger model at low effort costs less per task than a weaker one at medium, and still outscores it at its highest effort — the economical executor tier is opus at low effort, not sonnet.
+"Cheaper" is a choice of model and effort together, not of model alone. On current models the cheapest model pushed to its highest effort matches the stronger models' low and medium tiers: haiku at xhigh effort scores about the same as sonnet at medium and opus at low effort, for about a quarter of their cost, so lookups run on haiku at xhigh. Multi-step execution is where reliability matters, so it runs on opus at medium effort, the strongest tier short of the premium and high settings.
 
 ## What this governs — and what it doesn't
 
@@ -25,11 +25,10 @@ It is **not** a rule about how you read files or which tools you use. When you d
 
 ## The tier default
 
-- **Mechanical lookup** — locate a file, find a symbol, enumerate callers: `model: haiku`. The cheapest tier by a wide margin, and lookup needs no reasoning.
-- **Everything else** — multi-step work, anything that must reason or synthesize across files: opus at low effort — the plugin's `model-economy:worker` agent.
-- **Not sonnet.** On current per-task cost measurements, opus at low effort costs less than sonnet at medium and scores above sonnet at xhigh; sonnet no longer earns a slot.
+- **Mechanical lookup** — locate a file, find a symbol, enumerate callers: haiku at xhigh effort — the plugin's read-only `model-economy:explorer` agent. Haiku's top effort costs a few cents a task.
+- **Everything else** — multi-step work, anything that must reason or synthesize across files: opus at medium effort — the plugin's `model-economy:worker` agent.
 
-A spawn cannot set its effort level: a built-in subagent inherits the session's, so a model pin alone leaves an executor at high or xhigh when the session runs there. An agent's frontmatter can set effort, which is why multi-step work goes to `model-economy:worker` rather than to `general-purpose` with a model pin. `Explore` still inherits the session's effort — a lookup spends little on thinking either way.
+A spawn cannot set its effort level: a built-in subagent inherits the session's, so a model pin alone leaves a subagent at whatever effort the session runs. An agent's frontmatter can set effort, which is why lookups go to `model-economy:explorer` rather than to `Explore` with a model pin, and multi-step work to `model-economy:worker` rather than to `general-purpose` with one.
 
 ## The critic role (your half of the split)
 
@@ -37,7 +36,7 @@ Delegated execution is only safe with a critic — and being that critic is your
 
 ## What the plugin enforces automatically
 
-One point is enforced without you thinking about it: when you spawn a built-in `Explore` / `general-purpose` executor without pinning a model, a PreToolUse hook rewrites it — `Explore` gets `model: haiku` (pure read-only lookup), `general-purpose` is redirected to `model-economy:worker` (opus at low effort, for multi-step work) — and leaves you a note. Pinning `model` yourself opts out of both. If an `Explore` task turned out to need reasoning, re-issue it with `model: opus`. Everything else here is posture.
+One point is enforced without you thinking about it: when you spawn a built-in `Explore` / `general-purpose` executor, a PreToolUse hook rewrites it and leaves you a note. `general-purpose` is always redirected to `model-economy:worker` (opus at medium effort, for multi-step work), whatever `model` you pinned. `Explore` is always redirected to `model-economy:explorer` (haiku at xhigh effort, read-only lookup), whatever `model` you pinned. If an `Explore` task turned out to need reasoning, delegate it as `general-purpose` instead. Everything else here is posture.
 
 ## Failure modes to avoid
 

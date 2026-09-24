@@ -14,27 +14,27 @@ Every session (startup / resume) gets a short reminder injected: the main agent 
 
 A skill would under-trigger in casual conversation — a SessionStart injection is the reliable "always-on" lever.
 
-### 2. PreToolUse — exploration auto-pinned off the premium tier
+### 2. PreToolUse — exploration re-tiered off the premium tier
 
-The enforceable half. When the agent spawns a built-in `Explore` / `general-purpose` subagent (which otherwise **inherits the session model**) *without* pinning a `model`, the hook rewrites the spawn before it runs and leaves a note. `Explore` is pure read-only lookup, so it's pinned to the cheapest tier, `haiku`. `general-purpose` (and an empty `subagent_type`, which defaults to general-purpose) can involve multi-step work, so it's redirected to the plugin's own `model-economy:worker` agent — opus at low effort:
+The enforceable half. When the agent spawns a built-in `Explore` / `general-purpose` subagent (which otherwise **inherits the session model**), the hook rewrites the spawn before it runs and leaves a note. `general-purpose` (and an empty `subagent_type`, which defaults to general-purpose) can involve multi-step work, so it's **always** redirected to the plugin's own `model-economy:worker` agent — opus at medium effort — whatever `model` the spawn asked for. `Explore` is pure read-only lookup, so it's **always** redirected to the plugin's `model-economy:explorer` agent — haiku at xhigh effort, read-only tools — whatever `model` it asked for:
 
-> auto-pinned this Explore subagent to `model: haiku` — re-issue with `model: opus` if it needs cross-file reasoning.
+> redirected this Explore subagent to `model-economy:explorer` (haiku at xhigh effort, read-only lookup) — if the search needs cross-file reasoning, delegate it as `general-purpose` instead, which runs on the worker (opus at medium effort).
 >
-> redirected this general-purpose subagent to `model-economy:worker` (opus at low effort).
+> redirected this general-purpose subagent to `model-economy:worker` (opus at medium effort).
 
-Not `sonnet`: on current per-task cost measurements, Opus at low effort costs less than Sonnet at medium and scores above Sonnet at xhigh, so Sonnet is never the economical pick. A lookup never rides a reasoning model, and execution never rides a premium tier such as Fable just because that's what the session happens to be on.
+Why these tiers: on current per-task cost measurements, Haiku at xhigh effort scores about the same as Sonnet at medium and Opus at low (about 41–42 on the Artificial Analysis Intelligence Index) for about a quarter of their cost, at a few cents a task — so lookups get haiku's top effort. Multi-step execution (edits across files, chains of tool calls) is where reliability matters, so the worker runs Opus at medium effort (about 51), the strongest tier short of the premium and high settings. Neither rides a premium tier such as Fable just because that's what the session happens to be on.
 
-**Why a redirect, not a model pin, for general-purpose**: the spawn has no effort parameter, so a built-in subagent runs at the session's effort level — high or xhigh if that is where the session is. An agent's frontmatter can set effort, so the worker carries `model: opus` + `effort: low` and the hook points the spawn at it. Verified: rewriting `subagent_type` in `updatedInput` makes the harness spawn the named agent on its frontmatter model.
+**Why a redirect, not a model pin**: the spawn has no effort parameter, so a built-in subagent runs at the session's effort level, whatever that is. An agent's frontmatter can set effort, so the worker carries `model: opus` + `effort: medium`, the explorer `model: haiku` + `effort: xhigh`, and the hook points the spawn at the right one. Verified: rewriting `subagent_type` in `updatedInput` makes the harness spawn the named agent on its frontmatter model.
 
 - **Non-blocking.** It uses `updatedInput` to re-tier the spawn, never `deny`. The subagent runs immediately.
-- **Respects deliberate choices.** If you pinned a model yourself (including an intentional `opus`), it's left untouched — that is also how to keep the built-in general-purpose agent.
+- **No opt-out by pinning a model.** A `model` on an `Explore` or `general-purpose` spawn is dropped, since it would override the target agent's frontmatter. To get more than a lookup, delegate as `general-purpose`.
 - **Never touches custom agents.** Only `Explore` / `general-purpose` (and an empty `subagent_type`, which defaults to general-purpose) inherit the session model; agents with their own `model:` frontmatter are passed through.
 - **Doesn't change your permissions.** It sets no `permissionDecision`, so your Task permission settings still apply.
-- **Pins by task shape, not by session.** The hook can't read the session model, so it decides by subagent type: `haiku` for Explore, the opus-low worker for general-purpose. On an Opus session at low effort the redirect changes nothing; above that — a higher effort or a premium tier — it brings execution down to opus low.
+- **Pins by task shape, not by session.** The hook can't read the session model, so it decides by subagent type: the haiku-xhigh explorer for Explore, the opus-medium worker for general-purpose. Whatever the session runs, multi-step execution lands on opus at medium effort, never on the session's own model and effort.
 
 ## Scope: what the hook enforces vs. what the guidance covers
 
-The hook enforces one slice automatically — re-tiering an un-pinned exploration subagent at the spawn. The rest of the split (handing execution to a subagent at all, staying the arbiter, and challenging what comes back) has no clean trigger to hook — nothing fires when the main agent just does the work itself — so it lives in the SessionStart reminder and the playbook as guidance. Both concern **who executes (a subagent at haiku or opus) and your role over them** — the plugin still doesn't prescribe how you read files. The hook just makes the most common, most wasteful case automatic.
+The hook enforces one slice automatically — re-tiering a built-in exploration or execution subagent at the spawn. The rest of the split (handing execution to a subagent at all, staying the arbiter, and challenging what comes back) has no clean trigger to hook — nothing fires when the main agent just does the work itself — so it lives in the SessionStart reminder and the playbook as guidance. Both concern **who executes (a subagent at haiku or opus) and your role over them** — the plugin still doesn't prescribe how you read files. The hook just makes the most common, most wasteful case automatic.
 
 ## Install
 
@@ -56,7 +56,7 @@ This repo doubles as its own single-plugin marketplace (via `.claude-plugin/mark
 
 Prefer a menu? Run `/plugin`, use the **Marketplaces** tab to add `jasoncychueh/claude-model-economy-plugin`, then the **Discover** tab to install `model-economy`.
 
-Once installed there is nothing to invoke: each session opens with the economy reminder, and any un-pinned Explore search is auto-tiered to `haiku` (general-purpose is redirected to the opus-low worker).
+Once installed there is nothing to invoke: each session opens with the economy reminder, and any Explore search goes to the haiku-xhigh explorer and any general-purpose task to the opus-medium worker.
 
 ## Files
 
@@ -64,11 +64,12 @@ Once installed there is nothing to invoke: each session opens with the economy r
 model-economy/
 ├── .claude-plugin/plugin.json
 ├── agents/
-│   └── worker.md                  # general-purpose executor: opus at low effort
+│   ├── explorer.md                # read-only lookup agent: haiku at xhigh effort
+│   └── worker.md                  # general-purpose executor: opus at medium effort
 ├── hooks/
 │   ├── hooks.json                 # SessionStart + PreToolUse wiring
 │   ├── session-start-economy.js   # injects the economy principle each session
-│   └── economy-checkpoint.js      # pins un-pinned Explore to haiku, redirects general-purpose to the worker
+│   └── economy-checkpoint.js      # redirects Explore to the explorer, general-purpose to the worker
 └── references/
     └── economy-playbook.md        # the full generator/arbiter playbook
 ```

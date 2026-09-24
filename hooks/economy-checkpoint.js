@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * model-economy — exploration tier auto-pin.
+ * model-economy — subagent tier redirect.
  *
  * PreToolUse hook on the subagent-spawn tool (matcher "Task|Agent"). Its whole job
  * is one enforceable point of the generator/arbiter economy: delegated execution
@@ -14,25 +14,24 @@
  * a reasoning model it does not need at all. The hook catches the spawn the instant it
  * happens and gives it the tier the task shape calls for.
  *
- * WHAT it does, only when ALL of these hold:
- *   - the tool is the subagent spawn (tool_name Task or Agent), and
- *   - subagent_type is a BUILT-IN bulk agent that inherits the session model —
- *     "Explore", "general-purpose", or empty (empty defaults to general-purpose).
- *     Custom agents carry their own `model:` frontmatter, so they are NEVER touched, and
- *   - no `model` was pinned on the spawn (a deliberate model choice, including an
- *     intentional opus, is always respected).
- *   → Explore: add `model: "haiku"` via `updatedInput` (pure read-only lookup — the
- *     cheapest tier fits), plus an `additionalContext` note that it can be re-issued
- *     with `model: "opus"` when the search genuinely needs cross-file reasoning.
- *   → general-purpose / empty: redirect `subagent_type` to this plugin's `worker`
- *     agent, whose frontmatter is `model: opus` + `effort: low`. A redirect rather
+ * WHAT it does — only on the subagent spawn (tool_name Task or Agent) whose
+ * subagent_type is a BUILT-IN bulk agent that inherits the session model: "Explore",
+ * "general-purpose", or empty (empty defaults to general-purpose). Custom agents carry
+ * their own `model:` frontmatter, so they are NEVER touched.
+ *   → general-purpose / empty: ALWAYS redirect `subagent_type` to this plugin's `worker`
+ *     agent, whose frontmatter is `model: opus` + `effort: medium`, and drop any `model`
+ *     on the spawn — a per-spawn model would override the worker's own. A redirect rather
  *     than a `model` pin because the spawn has no effort parameter: pinning only the
- *     model would leave the executor at the session's effort, possibly high or xhigh.
- *     Not sonnet: on current per-task cost measurements opus at low effort costs
- *     less than sonnet at medium and scores above sonnet at xhigh. No `model` is added
- *     to the redirected spawn — a per-spawn model would override the worker's own.
+ *     model would leave the executor at the session's effort, not at medium.
  *     Verified: a PreToolUse `updatedInput` that changes `subagent_type` makes the
  *     harness spawn the named agent, on that agent's frontmatter model.
+ *   → Explore: ALWAYS redirect `subagent_type` to this plugin's `explorer` agent
+ *     (`model: haiku` + `effort: xhigh`, read-only tools) and drop any `model`, for the
+ *     same reasons: a per-spawn model would override the explorer's own, and only
+ *     frontmatter can set xhigh. A lookup gets haiku's top effort, which scores about the
+ *     same as sonnet at medium or opus at low for about a quarter of their cost. The note
+ *     says a search that genuinely needs cross-file reasoning should be delegated as
+ *     general-purpose instead, which runs on the worker.
  *
  * WHY no permissionDecision: setting "allow" would skip the user's Task permission
  * prompt; this plugin only picks the tier, it must not change permission behavior. We
@@ -41,7 +40,7 @@
  *
  * WHY it can't be smarter about the tier: PreToolUse stdin carries no session model and
  * no reliable way to tell a mechanical search from a reasoning one, so the subagent type
- * stands in for the task shape and the model is left the haiku-vs-opus call via the note.
+ * stands in for the task shape and the model is left the explorer-vs-worker call via the note.
  *
  * FAIL-OPEN: any missing/odd input -> emit nothing -> the spawn proceeds unchanged.
  * Reads stdin only, writes nothing. Pure Node (Claude Code ships Node).
@@ -49,8 +48,10 @@
 'use strict';
 const fs = require('fs');
 
-// The plugin's own general-purpose executor (agents/worker.md): opus at low effort.
+// The plugin's own general-purpose executor (agents/worker.md): opus at medium effort.
 const WORKER = 'model-economy:worker';
+// The plugin's own read-only lookup agent (agents/explorer.md): haiku at xhigh effort.
+const EXPLORER = 'model-economy:explorer';
 
 // no-op: emit nothing -> Claude Code proceeds with the original tool call
 function passthrough() { process.exit(0); }
@@ -71,21 +72,20 @@ try {
   const inherits = st === '' || st === 'explore' || st === 'general-purpose';
   if (!inherits) passthrough();
 
-  // A deliberate model choice (any non-empty value) is respected.
-  if (ti.model != null && String(ti.model).trim() !== '') passthrough();
+  // Any per-spawn model is dropped: it would override the target agent's frontmatter.
+  const { model: _dropped, ...rest } = ti;
 
   let updatedInput, note;
-  if (st === 'explore') {
-    // Pure read-only lookup (find files/symbols) — the cheapest tier.
-    updatedInput = Object.assign({}, ti, { model: 'haiku' });
-    note = 'Model economy: auto-pinned this Explore subagent to `model: haiku` — a lookup needs no reasoning model. ' +
-      'If this task genuinely needs cross-file reasoning or synthesis, re-issue it with `model: opus`.';
+  if (st !== 'explore') {
+    // general-purpose / empty: always the worker, whatever model was asked for.
+    updatedInput = Object.assign({}, rest, { subagent_type: WORKER });
+    note = 'Model economy: redirected this general-purpose subagent to `' + WORKER + '` (opus at medium effort) — ' +
+      'a delegated task runs at the tier its shape needs, not at whatever model and effort the session runs.';
   } else {
-    // Multi-step work — redirected to the worker so both model and effort are pinned.
-    updatedInput = Object.assign({}, ti, { subagent_type: WORKER });
-    note = 'Model economy: redirected this general-purpose subagent to `' + WORKER + '` (opus at low effort) — ' +
-      'a delegated task runs at the tier its shape needs, not at whatever model and effort the session runs. ' +
-      'Pin `model` on the spawn to keep the built-in general-purpose agent instead.';
+    // Explore: always the explorer — a read-only lookup at haiku's top effort.
+    updatedInput = Object.assign({}, rest, { subagent_type: EXPLORER });
+    note = 'Model economy: redirected this Explore subagent to `' + EXPLORER + '` (haiku at xhigh effort, read-only lookup). ' +
+      'If the search genuinely needs cross-file reasoning or synthesis, delegate it as `general-purpose` instead, which runs on `' + WORKER + '` (opus at medium effort).';
   }
   process.stdout.write(JSON.stringify({
     hookSpecificOutput: { hookEventName: 'PreToolUse', updatedInput, additionalContext: note },
